@@ -1,0 +1,133 @@
+---
+title: "Undernourishment in Africa: A Management Crisis and Opportunity"
+subtitle: "Data Analytics and Story Telling Assignment"
+author: "Gautam Chandwani"
+format:
+  html:
+    theme: cosmo
+    backgroundcolor: lightgrey
+toc: true
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+Child undernourishment remains a stark reality in Africa, a pervasive threat to human capital development and long-term economic prosperity. While graphs highlight potential economic growth in selected countries, undernourishment rates persist. This disconnect points to critical breakdowns in resource allocation and the translation of economic output into societal well-being.
+
+```{r}
+library(tidyverse)
+library (plotly)
+unicef_metadata <- read.csv("C:/Users/lenovo/Downloads/unicef_metadata.csv")
+indic_2 <- read.csv("C:/Users/lenovo/Desktop/indicator2_clean.csv")
+
+
+joined <- full_join(unicef_metadata, indic_2, join_by(Country))
+
+unicef_metadata_2018 <- unicef_metadata %>%
+  filter(Year == 2018)
+indicator_2018 <- indic_2 %>%
+  filter(Year == 2018)
+
+join_2018 <- full_join(unicef_metadata_2018, indicator_2018, join_by(Country))
+
+#Undernourished Children across the Globe as of 2018
+map_world <- map_data("world")
+worldmap_join <- full_join(join_2018, map_world, by = c("Country" = "region"))
+
+map_2018 <- ggplot(worldmap_join) +
+  aes(x = long, y = lat, group = group, fill = Undernourished.Children) +
+  geom_polygon(color = "black", size = 0.2) +
+  scale_fill_gradient2(low = "grey", high = "darkred", name = " % of Undernourished Children") +
+  labs(title = "Undernourished Children across the Globe",
+       x = "Longituge", y = "Latitude") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        legend.text = element_text(size = 7),
+        panel.background = element_rect(fill = "lightblue"),
+        axis.ticks = element_blank())
+ggplotly (map_2018)
+```
+
+*(World Map Data for Undernourishment in Children)*
+
+## Where should resources be allocated Military or Healthcare?
+
+Data reveals a negative correlation between child undernourishment and military spending globally. Yet, African nations buck this trend, highlighting a need for management strategies that optimize resource allocation for maximum social and economic return. High defense spending alongside persistent child hunger indicates an inefficient operating environment and potential misalignment of priorities.
+
+```{r}
+scat2018 <- ggplot(data = join_2018,aes(x = Military.expenditure....of.GDP., y = Undernourished.Children)) +
+  geom_point(fill = "red", color = "darkred") +
+  labs(title = "Military expenditure and Undernourishment",
+       x = "Military expenditure",
+       y = "% of Undernourished Children") +
+  theme_minimal()  +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  theme(panel.background = element_rect(fill = "grey"),
+        axis.ticks = element_blank()) +
+  scale_x_continuous(breaks = seq(0.0, 5.0, by = 0.5))
+ggplotly(scat2018)
+```
+
+*(Scatter plot showcasing effects on military expenditure)*
+
+## Effect of Inflation on Healthcre
+
+Rising inflation further undermines progress. Staple food costs soar, impacting the bottom-line health of families. This directly influences the productivity and development potential of the future workforce. Undernourishment perpetuates a cycle of limited human capital, impacting long-term economic growth and stability
+
+```{r}
+#Time series line graph 1 (GDP over the years)
+
+avg_gdp <- joined %>%
+  group_by(Year.x) %>%
+  summarize(avg_gdp = mean(GDP.per.capita, na.rm = TRUE))
+
+ggplot(avg_gdp, aes(x = Year.x, y = avg_gdp)) +
+  geom_line() +
+  labs(title = "GDP Over the Years",
+       x = "Year",
+       y = "GDP per capita") +
+  theme_classic()
+
+#Time series line graph 2 (inflation over the years)
+
+avg_inflation <- joined %>%
+  group_by(Year.x) %>%
+  summarize(avg_inflation = mean(Inflation., na.rm = TRUE))
+
+ggplot(avg_inflation, aes(x = Year.x, y = avg_inflation)) +
+  geom_line() +
+  labs(title = "Inflation over the Years",
+       x = "Year",
+       y = "Inflation as a percentage of Consumer Prices") +
+  theme_classic()
+
+```
+
+## Africa's Crisis
+
+**The African continent** suffers the highest prevalence of undernourishment. Concerningly, countries dedicating larger portions of their spending towards military interests often exhibit higher rates of undernourished children.
+
+```{r}
+#Bar plot of undernourishment in African countries from 1960-2022
+
+african_countries <- c("South Sudan", "Sudan", "Eritrea", "Djibouti", "Niger")
+african_data <- joined %>%
+  filter(Country %in% african_countries)
+
+bar_africa <- ggplot(african_data, aes(x=reorder(Country, -Undernourished.Children), y=Undernourished.Children)) +
+  geom_col(fill="red", width=0.7) +
+  coord_flip() +
+  labs(x="Country", y="% of Undernourished Children", title="Undernourished Children in selected African countries") +
+  theme_minimal()
+ggplotly(bar_africa)
+```
+
+1.  **Double Burden:** Low life expectancy further complicates the challenges in Africa, creating a "double burden" of undernourishment and underdevelopment. Sudan, South Sudan, and Eritrea stand as urgent examples requiring immediate attention.
+
+2.  **Solutions Require Multi-Sector Approach:** Effectively tackling child undernourishment demands addressing poverty, conflict, and inequality at their root. Priority investments must focus on:
+
+3.  **Healthcare access Education Sustainable and equitable food systems Call To Action:** Only a comprehensive, coordinated strategy can break the persistent cycle of undernourishment, ensuring that every child has the chance to thrive and reach their full potential.
+
+**African countries' road to lasting prosperity has to be translated into revolutionary shifts. This "business as usual" approach is ineffective. A fundamental reallocation of resources and a strict dedication for the reform are fundament. African countries should invest in programs that offer immediate solutions to child starvation and potential to unlock human capital for a better world to be created free of malnutrition. It is not only economic, but also moral matter. The time for consequent resolutions is now.\
+**![](images/ggs.jpg)
